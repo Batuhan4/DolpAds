@@ -144,6 +144,7 @@ export default function CreateCampaignPage() {
     const parsedBid = toMist(formData.maxBid)
     const fallbackBid = budgetMist / 100n
     const cpcBidMist = parsedBid && parsedBid > 0n ? parsedBid : fallbackBid > 0n ? fallbackBid : 1n
+    const campaignName = formData.name.trim() || "Untitled Campaign"
 
     setIsSubmitting(true)
     setError(null)
@@ -199,6 +200,7 @@ export default function CreateCampaignPage() {
       }
 
       await createCampaignRecord({
+        name: campaignName,
         id: campaignId,
         suiObjectId: campaignId,
         advertiserWallet: account.address,

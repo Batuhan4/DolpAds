@@ -12,6 +12,7 @@ export async function fetchCampaigns() {
   const res = await fetch(`${API_BASE}/api/campaigns`, { cache: "no-store" });
   return handleResponse<{
     campaigns: Array<{
+      name: string;
       id: string;
       advertiserWallet: string;
       totalDeposited: number;
@@ -55,6 +56,7 @@ export async function claimEarnings(publisher: string, campaignId: string) {
 }
 
 export async function createCampaignRecord(input: {
+  name: string;
   id: string;
   suiObjectId?: string;
   advertiserWallet: string;
@@ -68,6 +70,7 @@ export async function createCampaignRecord(input: {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
+      name: input.name,
       id: input.id,
       sui_object_id: input.suiObjectId ?? input.id,
       advertiser_wallet: input.advertiserWallet,
@@ -80,6 +83,7 @@ export async function createCampaignRecord(input: {
   });
 
   return handleResponse<{
+    name: string;
     id: string;
     suiObjectId?: string;
     advertiserWallet: string;

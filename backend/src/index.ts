@@ -23,6 +23,7 @@ app.get("/health", (_req, res) => res.json({ status: "ok" }));
 
 // Seed a demo campaign so /serve works out of the box.
 seedCampaign({
+  name: "Demo Campaign",
   id: "demo-campaign",
   advertiserWallet: "0x_advertiser_demo",
   totalDeposited: 10_000_000,

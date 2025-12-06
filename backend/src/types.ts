@@ -1,6 +1,7 @@
 export type CampaignStatus = "pending" | "active" | "paused" | "empty";
 
 export interface Campaign {
+  name: string;
   id: string;
   suiObjectId?: string;
   advertiserWallet: string;

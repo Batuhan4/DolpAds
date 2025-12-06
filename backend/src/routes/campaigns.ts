@@ -16,6 +16,7 @@ campaignsRouter.get("/campaigns", (_req, res) => {
 });
 
 const createCampaignBody = z.object({
+  name: z.string().min(1).optional(),
   id: z.string().min(3),
   sui_object_id: z.string().min(3),
   advertiser_wallet: z.string().min(3),
@@ -34,6 +35,7 @@ campaignsRouter.post("/campaigns", (req, res) => {
 
   const body = parsed.data;
   const record = registerCampaign({
+    name: body.name,
     id: body.id,
     suiObjectId: body.sui_object_id,
     advertiserWallet: body.advertiser_wallet,

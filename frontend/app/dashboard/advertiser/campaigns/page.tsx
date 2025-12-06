@@ -47,7 +47,7 @@ export default function CampaignsPage() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Campaign ID</TableHead>
+                <TableHead>Campaign</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Budget</TableHead>
                 <TableHead>Spent</TableHead>
@@ -60,27 +60,35 @@ export default function CampaignsPage() {
                 const spent = mistToSui(campaign.spentAmount)
                 const budget = mistToSui(campaign.totalDeposited)
                 const cpc = mistToSui(campaign.cpcBid)
+                const displayName = campaign.name || campaign.id
                 return (
                   <TableRow key={campaign.id}>
                     <TableCell>
-                      <div className="flex items-center gap-2">
-                        <span className="font-medium">{campaign.id}</span>
-                        <a
-                          href={`${suiScanBase}/${campaign.id}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-muted-foreground hover:text-foreground"
-                        >
-                          <ExternalLink className="h-3 w-3" />
-                        </a>
-                        <a
-                          href={campaign.targetUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-muted-foreground hover:text-foreground"
-                        >
-                          <ExternalLink className="h-3 w-3" />
-                        </a>
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-2">
+                          <span className="font-medium">{displayName}</span>
+                          {campaign.targetUrl && (
+                            <a
+                              href={campaign.targetUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-muted-foreground hover:text-foreground"
+                            >
+                              <ExternalLink className="h-3 w-3" />
+                            </a>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                          <span className="font-mono">{campaign.id}</span>
+                          <a
+                            href={`${suiScanBase}/${campaign.id}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-muted-foreground hover:text-foreground"
+                          >
+                            <ExternalLink className="h-3 w-3" />
+                          </a>
+                        </div>
                       </div>
                     </TableCell>
                     <TableCell>

@@ -4,7 +4,7 @@ import Link from "next/link"
 export function Footer() {
   return (
     <footer className="border-t border-border bg-background">
-      <div className="container px-4 py-12">
+      <div className="container mx-auto px-4 py-12">
         <div className="flex flex-col md:flex-row items-center justify-between gap-6">
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
@@ -14,7 +14,7 @@ export function Footer() {
           </div>
 
           <nav className="flex items-center gap-8 text-sm text-muted-foreground">
-            <Link href="#" className="hover:text-foreground transition-colors">
+            <Link href="/docs" className="hover:text-foreground transition-colors">
               Documentation
             </Link>
             <Link href="#" className="hover:text-foreground transition-colors">

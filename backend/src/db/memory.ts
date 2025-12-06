@@ -13,6 +13,7 @@ const defaultCampaignImage =
 
 // Registers an on-chain campaign in the in-memory store (values in mist for SUI).
 export function registerCampaign(input: {
+  name?: string;
   id: string;
   suiObjectId?: string;
   advertiserWallet: string;
@@ -23,6 +24,7 @@ export function registerCampaign(input: {
   status?: CampaignStatus;
 }) {
   const campaign: Campaign = {
+    name: input.name?.trim() || input.id,
     id: input.id,
     suiObjectId: input.suiObjectId ?? input.id,
     advertiserWallet: input.advertiserWallet,
@@ -41,6 +43,7 @@ export function registerCampaign(input: {
 export function seedCampaign(input: Partial<Campaign> & { id?: string }) {
   const id = input.id ?? uuid();
   const merged: Campaign = {
+    name: input.name?.trim() || id,
     id,
     suiObjectId: input.suiObjectId,
     advertiserWallet: input.advertiserWallet ?? "0x_advertiser",

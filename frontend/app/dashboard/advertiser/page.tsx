@@ -84,7 +84,7 @@ export default function AdvertiserOverview() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Campaign ID</TableHead>
+                <TableHead>Campaign</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Spent / Budget</TableHead>
                 <TableHead>Bid (CPC)</TableHead>
@@ -96,9 +96,15 @@ export default function AdvertiserOverview() {
                 const spent = mistToSui(campaign.spentAmount);
                 const budget = mistToSui(campaign.totalDeposited);
                 const cpc = mistToSui(campaign.cpcBid);
+                const displayName = campaign.name || campaign.id;
                 return (
                   <TableRow key={campaign.id}>
-                    <TableCell className="font-medium">{campaign.id}</TableCell>
+                    <TableCell>
+                      <div className="space-y-1">
+                        <span className="font-medium">{displayName}</span>
+                        <span className="text-xs text-muted-foreground font-mono">{campaign.id}</span>
+                      </div>
+                    </TableCell>
                     <TableCell>
                       <StatusBadge status={campaign.status as any} />
                     </TableCell>
