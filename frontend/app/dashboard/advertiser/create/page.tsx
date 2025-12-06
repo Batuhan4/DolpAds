@@ -3,7 +3,7 @@
 import type React from "react"
 
 import { useState } from "react"
-import { useCurrentAccount, useSignAndExecuteTransaction } from "@mysten/dapp-kit"
+import { useCurrentAccount, useCurrentWallet, useSignAndExecuteTransaction, useSuiClient } from "@mysten/dapp-kit"
 import { Transaction } from "@mysten/sui/transactions"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -22,15 +22,56 @@ const steps = [
 ]
 const defaultBannerUrl = "https://dummyimage.com/728x90/0f172a/ffffff&text=DolpAds+Leaderboard"
 
-const base64ToHex = (b64: string) =>
-  Array.from(Uint8Array.from(atob(b64), (c) => c.charCodeAt(0)))
-    .map((x) => x.toString(16).padStart(2, "0"))
-    .join("")
+const base64ToHex = (b64: string) => {
+  try {
+    // normalize base64url -> base64 and pad
+    const normalized = b64.replace(/-/g, "+").replace(/_/g, "/").padEnd(Math.ceil(b64.length / 4) * 4, "=")
+    return Array.from(Uint8Array.from(atob(normalized), (c) => c.charCodeAt(0)))
+      .map((x) => x.toString(16).padStart(2, "0"))
+      .join("")
+  } catch (_err) {
+    return undefined
+  }
+}
+
+const extractCampaignId = (resp: any) => {
+  if (!resp) return undefined
+
+  const fromChanges = resp.objectChanges?.find(
+    (change: any) =>
+      change.type === "created" &&
+      "objectType" in change &&
+      typeof change.objectType === "string" &&
+      change.objectType.includes("::core::Campaign"),
+  ) as { objectId?: string } | undefined
+
+  const fromShared = resp.effects?.created?.find((c: any) => {
+    const owner = c?.owner
+    if (!owner) return false
+    if (typeof owner === "object" && "Shared" in owner) return true
+    if (typeof owner === "string" && owner.toLowerCase().includes("shared")) return true
+    return false
+  }) as { reference?: { objectId?: string } } | undefined
+
+  const fromEvent = resp.events?.find(
+    (e: any) =>
+      typeof e.type === "string" &&
+      e.type.includes("::core::CampaignFunded") &&
+      e.parsedJson?.campaign_id,
+  ) as { parsedJson?: { campaign_id?: string } } | undefined
+
+  const eventIdHex = fromEvent?.parsedJson?.campaign_id ? base64ToHex(fromEvent.parsedJson.campaign_id) : undefined
+  const eventId = eventIdHex ? `0x${eventIdHex}` : undefined
+
+  return fromChanges?.objectId ?? fromShared?.reference?.objectId ?? eventId
+}
 
 export default function CreateCampaignPage() {
   const router = useRouter()
   const account = useCurrentAccount()
+  const currentWallet = useCurrentWallet()
   const { mutateAsync: signAndExecuteTransaction } = useSignAndExecuteTransaction()
+  const client = useSuiClient()
   const [currentStep, setCurrentStep] = useState(1)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [showSuccess, setShowSuccess] = useState(false)
@@ -80,6 +121,19 @@ export default function CreateCampaignPage() {
       setError("Connect your Sui wallet to create a campaign.")
       return
     }
+    const expectedNetwork = (process.env.NEXT_PUBLIC_SUI_NETWORK as string | undefined)?.toLowerCase() ?? "testnet"
+    const walletChain = currentWallet?.chain?.id?.toLowerCase() // e.g., "sui:testnet"
+    const walletNetworkMatches =
+      !walletChain || // some wallets omit id; don't block in that case
+      walletChain === expectedNetwork ||
+      walletChain.endsWith(`:${expectedNetwork}`) ||
+      walletChain.includes(expectedNetwork)
+    if (!walletNetworkMatches) {
+      setError(
+        `Wallet is on ${walletChain ?? "unknown"}; switch to ${expectedNetwork} in your wallet and retry.`,
+      )
+      return
+    }
 
     const budgetMist = toMist(formData.budget)
     if (budgetMist === null) {
@@ -107,39 +161,41 @@ export default function CreateCampaignPage() {
         options: { showEffects: true, showObjectChanges: true, showEvents: true },
       })
 
-      const createdFromChanges = result.objectChanges?.find(
-        (change) =>
-          change.type === "created" &&
-          "objectType" in change &&
-          typeof change.objectType === "string" &&
-          change.objectType.includes("::core::Campaign"),
-      ) as { objectId?: string } | undefined
+      console.log("CreateCampaign TX result", {
+        digest: (result as any)?.digest,
+        objectChanges: result.objectChanges,
+        effects: result.effects,
+        events: result.events,
+      })
 
-      const createdShared = result.effects?.created?.find((c: any) => {
-        if (!c?.owner) return false
-        // Shared owners come back as { Shared: { initial_shared_version: "..." } }
-        if (typeof c.owner === "object" && "Shared" in c.owner) return true
-        // Sometimes owner can be a string "Shared"
-        if (typeof c.owner === "string" && c.owner.toLowerCase().includes("shared")) return true
-        return false
-      }) as { reference?: { objectId?: string } } | undefined
+      let campaignId = extractCampaignId(result)
 
-      const fromEvent = result.events?.find(
-        (e: any) =>
-          typeof e.type === "string" &&
-          e.type.includes("::core::CampaignFunded") &&
-          e.parsedJson?.campaign_id,
-      ) as { parsedJson?: { campaign_id?: string } } | undefined
-
-      const campaignId =
-        createdFromChanges?.objectId ??
-        createdShared?.reference?.objectId ??
-        (fromEvent?.parsedJson?.campaign_id
-          ? `0x${base64ToHex(fromEvent.parsedJson.campaign_id)}`
-          : undefined)
+      // Fallback 1: fetch full tx data via RPC (poll) if not present in wallet response
+      if (!campaignId) {
+        const digest = (result as any)?.digest
+        if (digest) {
+          const maxAttempts = 8
+          const delayMs = 1000
+          for (let i = 0; i < maxAttempts && !campaignId; i++) {
+            try {
+              const rpcResult = await client.getTransactionBlock({
+                digest,
+                options: { showEffects: true, showEvents: true, showObjectChanges: true },
+              })
+              console.log("CreateCampaign RPC fetch", { attempt: i + 1, rpcResult })
+              campaignId = extractCampaignId(rpcResult)
+              if (campaignId) break
+            } catch (rpcErr) {
+              console.log("CreateCampaign RPC fetch failed", { attempt: i + 1, error: rpcErr })
+            }
+            await new Promise((r) => setTimeout(r, delayMs))
+          }
+        }
+      }
 
       if (!campaignId) {
-        throw new Error("Could not find campaign object id from transaction.")
+        const digest = (result as any)?.digest ?? "unknown"
+        throw new Error(`Could not find campaign object id from transaction. Digest: ${digest}`)
       }
 
       await createCampaignRecord({

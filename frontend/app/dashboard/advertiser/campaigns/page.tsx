@@ -9,6 +9,14 @@ import { fetchCampaigns, mistToSui } from "@/lib/api"
 import { Pause, Pencil, Play, Trash2, ExternalLink } from "lucide-react"
 import Link from "next/link"
 
+const network = (process.env.NEXT_PUBLIC_SUI_NETWORK ?? "testnet").toLowerCase()
+const suiScanBase =
+  network === "mainnet"
+    ? "https://suiscan.xyz/mainnet/object"
+    : network === "devnet"
+      ? "https://suiscan.xyz/devnet/object"
+      : "https://suiscan.xyz/testnet/object"
+
 export default function CampaignsPage() {
   const { data, isLoading, isError } = useQuery({
     queryKey: ["campaigns"],
@@ -57,6 +65,14 @@ export default function CampaignsPage() {
                     <TableCell>
                       <div className="flex items-center gap-2">
                         <span className="font-medium">{campaign.id}</span>
+                        <a
+                          href={`${suiScanBase}/${campaign.id}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-muted-foreground hover:text-foreground"
+                        >
+                          <ExternalLink className="h-3 w-3" />
+                        </a>
                         <a
                           href={campaign.targetUrl}
                           target="_blank"
