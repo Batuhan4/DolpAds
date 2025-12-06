@@ -68,7 +68,7 @@ export function Topbar() {
             <span className="font-mono text-xs">{wallet.address}</span>
           </Badge>
           <Badge className="bg-primary text-primary-foreground px-3 py-1.5">
-            {wallet.balance.toLocaleString()} USDC
+            {wallet.balance.toLocaleString()} SUI
           </Badge>
         </div>
       )}

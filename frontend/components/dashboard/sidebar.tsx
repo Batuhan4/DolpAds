@@ -123,7 +123,9 @@ export function Sidebar() {
             <div className="text-sm font-mono text-sidebar-foreground truncate">
               {currentAccount.address.slice(0, 10)}...{currentAccount.address.slice(-4)}
             </div>
-            <div className="text-sm text-sidebar-primary font-medium mt-1">{wallet.balance.toLocaleString()} USDC</div>
+            <div className="text-sm text-sidebar-primary font-medium mt-1">
+              {wallet.balance.toLocaleString()} SUI
+            </div>
           </div>
         )}
         <Button

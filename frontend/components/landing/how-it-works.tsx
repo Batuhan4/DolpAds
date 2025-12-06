@@ -14,7 +14,7 @@ const steps = [
   {
     step: "03",
     title: "Earn or Reach",
-    description: "Publishers earn USDC. Advertisers reach Web3 audiences.",
+    description: "Publishers earn SUI. Advertisers reach Web3 audiences.",
   },
 ]
 

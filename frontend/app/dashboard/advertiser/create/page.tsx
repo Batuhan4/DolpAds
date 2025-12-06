@@ -104,7 +104,7 @@ export default function CreateCampaignPage() {
 
       const result = await signAndExecuteTransaction({
         transaction: tx,
-        options: { showEffects: true, showObjectChanges: true },
+        options: { showEffects: true, showObjectChanges: true, showEvents: true },
       })
 
       const createdFromChanges = result.objectChanges?.find(
