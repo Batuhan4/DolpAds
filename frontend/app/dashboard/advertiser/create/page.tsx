@@ -22,6 +22,11 @@ const steps = [
 ]
 const defaultBannerUrl = "https://dummyimage.com/728x90/0f172a/ffffff&text=DolpAds+Leaderboard"
 
+const base64ToHex = (b64: string) =>
+  Array.from(Uint8Array.from(atob(b64), (c) => c.charCodeAt(0)))
+    .map((x) => x.toString(16).padStart(2, "0"))
+    .join("")
+
 export default function CreateCampaignPage() {
   const router = useRouter()
   const account = useCurrentAccount()
@@ -102,7 +107,7 @@ export default function CreateCampaignPage() {
         options: { showEffects: true, showObjectChanges: true },
       })
 
-      const created = result.objectChanges?.find(
+      const createdFromChanges = result.objectChanges?.find(
         (change) =>
           change.type === "created" &&
           "objectType" in change &&
@@ -110,7 +115,29 @@ export default function CreateCampaignPage() {
           change.objectType.includes("::core::Campaign"),
       ) as { objectId?: string } | undefined
 
-      const campaignId = created?.objectId
+      const createdShared = result.effects?.created?.find((c: any) => {
+        if (!c?.owner) return false
+        // Shared owners come back as { Shared: { initial_shared_version: "..." } }
+        if (typeof c.owner === "object" && "Shared" in c.owner) return true
+        // Sometimes owner can be a string "Shared"
+        if (typeof c.owner === "string" && c.owner.toLowerCase().includes("shared")) return true
+        return false
+      }) as { reference?: { objectId?: string } } | undefined
+
+      const fromEvent = result.events?.find(
+        (e: any) =>
+          typeof e.type === "string" &&
+          e.type.includes("::core::CampaignFunded") &&
+          e.parsedJson?.campaign_id,
+      ) as { parsedJson?: { campaign_id?: string } } | undefined
+
+      const campaignId =
+        createdFromChanges?.objectId ??
+        createdShared?.reference?.objectId ??
+        (fromEvent?.parsedJson?.campaign_id
+          ? `0x${base64ToHex(fromEvent.parsedJson.campaign_id)}`
+          : undefined)
+
       if (!campaignId) {
         throw new Error("Could not find campaign object id from transaction.")
       }
