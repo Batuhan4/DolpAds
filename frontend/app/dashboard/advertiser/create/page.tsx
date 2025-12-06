@@ -87,6 +87,8 @@ export default function CreateCampaignPage() {
   })
   const [uploadedFile, setUploadedFile] = useState<File | null>(null)
   const packageId = process.env.NEXT_PUBLIC_PACKAGE_ID
+  const fallbackCreativeUrl =
+    process.env.NEXT_PUBLIC_DEFAULT_CREATIVE_URL ?? defaultBannerUrl
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }))
@@ -199,6 +201,15 @@ export default function CreateCampaignPage() {
         throw new Error(`Could not find campaign object id from transaction. Digest: ${digest}`)
       }
 
+      let creativeBase64: string | undefined
+      let creativeMime: string | undefined
+
+      if (uploadedFile) {
+        const buffer = await uploadedFile.arrayBuffer()
+        creativeBase64 = btoa(String.fromCharCode(...new Uint8Array(buffer)))
+        creativeMime = uploadedFile.type || "image/png"
+      }
+
       await createCampaignRecord({
         name: campaignName,
         id: campaignId,
@@ -206,9 +217,19 @@ export default function CreateCampaignPage() {
         advertiserWallet: account.address,
         totalDeposited: Number(budgetMist),
         cpcBid: Number(cpcBidMist),
-        imageUrl: defaultBannerUrl,
+        imageUrl: fallbackCreativeUrl,
         targetUrl: formData.destinationUrl || "https://dolpads.com",
         status: "active",
+        creativeBase64,
+        creativeMimeType: creativeMime,
+        creativeUrl: creativeBase64 ? undefined : fallbackCreativeUrl,
+        metadata: {
+          name: campaignName,
+          category: formData.category,
+          target_url: formData.destinationUrl || "https://dolpads.com",
+          cpc_bid: Number(cpcBidMist),
+          budget_mist: Number(budgetMist),
+        },
       })
 
       setShowSuccess(true)

@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { StatusBadge } from "@/components/dashboard/status-badge"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -17,11 +17,17 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog"
-import { mockWebsites, type Website } from "@/lib/mock-data"
+import { createWebsite, fetchWebsites, type Website } from "@/lib/api"
 import { Plus, ExternalLink, Check } from "lucide-react"
 
 export default function WebsitesPage() {
-  const [websites, setWebsites] = useState<Website[]>(mockWebsites)
+  const publisherWallet = useMemo(
+    () => process.env.NEXT_PUBLIC_PUBLISHER_WALLET ?? "0x_publisher_demo",
+    [],
+  )
+  const [websites, setWebsites] = useState<Website[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
   const [isOpen, setIsOpen] = useState(false)
   const [showSuccess, setShowSuccess] = useState(false)
   const [newWebsite, setNewWebsite] = useState({
@@ -31,21 +37,44 @@ export default function WebsitesPage() {
     monthlyVisitors: "",
   })
 
-  const handleAddWebsite = () => {
-    const website: Website = {
-      id: String(websites.length + 1),
-      name: newWebsite.name,
-      url: newWebsite.url,
-      category: newWebsite.category,
-      monthlyVisitors: Number(newWebsite.monthlyVisitors),
-      status: "pending",
-      dailyImpressions: 0,
+  useEffect(() => {
+    const load = async () => {
+      try {
+        setLoading(true)
+        setError(null)
+        const res = await fetchWebsites(publisherWallet)
+        setWebsites(res.websites)
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Failed to load websites")
+      } finally {
+        setLoading(false)
+      }
     }
-    setWebsites([...websites, website])
-    setIsOpen(false)
-    setNewWebsite({ name: "", url: "", category: "", monthlyVisitors: "" })
-    setShowSuccess(true)
-    setTimeout(() => setShowSuccess(false), 3000)
+    void load()
+  }, [publisherWallet])
+
+  const handleAddWebsite = () => {
+    const submit = async () => {
+      try {
+        setError(null)
+        const monthlyVisitors = Number(newWebsite.monthlyVisitors || 0)
+        const record = await createWebsite({
+          publisherWallet,
+          name: newWebsite.name,
+          url: newWebsite.url,
+          category: newWebsite.category,
+          monthlyVisitors,
+        })
+        setWebsites((prev) => [...prev, record])
+        setIsOpen(false)
+        setNewWebsite({ name: "", url: "", category: "", monthlyVisitors: "" })
+        setShowSuccess(true)
+        setTimeout(() => setShowSuccess(false), 3000)
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Failed to add website")
+      }
+    }
+    void submit()
   }
 
   return (
@@ -146,6 +175,8 @@ export default function WebsitesPage() {
           <CardDescription>Your websites approved for ad monetization</CardDescription>
         </CardHeader>
         <CardContent>
+          {loading && <p className="text-sm text-muted-foreground">Loading...</p>}
+          {error && <p className="text-sm text-destructive mb-3">{error}</p>}
           <Table>
             <TableHeader>
               <TableRow>

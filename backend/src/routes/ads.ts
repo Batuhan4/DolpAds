@@ -15,6 +15,23 @@ const serveQuery = z.object({
   slot_size: z.string().optional(),
 });
 
+const ipBuckets: Map<string, { count: number; expires: number }> = new Map();
+const BUCKET_TTL_MS = 60_000;
+const BUCKET_LIMIT = 120; // per IP per minute
+
+function checkRateLimit(ip?: string) {
+  if (!ip) return true;
+  const now = Date.now();
+  const bucket = ipBuckets.get(ip);
+  if (!bucket || bucket.expires < now) {
+    ipBuckets.set(ip, { count: 1, expires: now + BUCKET_TTL_MS });
+    return true;
+  }
+  if (bucket.count >= BUCKET_LIMIT) return false;
+  bucket.count += 1;
+  return true;
+}
+
 adsRouter.get("/serve", (req, res) => {
   const parsed = serveQuery.safeParse(req.query);
   if (!parsed.success) {
@@ -47,6 +64,10 @@ const trackBody = z.object({
 });
 
 adsRouter.post("/track", (req, res) => {
+  if (!checkRateLimit(req.ip)) {
+    return res.status(429).json({ error: "Rate limit exceeded" });
+  }
+
   const parsed = trackBody.safeParse(req.body);
   if (!parsed.success) {
     return res.status(400).json({ error: parsed.error.flatten() });

@@ -65,6 +65,10 @@ export async function createCampaignRecord(input: {
   imageUrl?: string;
   targetUrl?: string;
   status?: "pending" | "active" | "paused" | "empty";
+  creativeBase64?: string;
+  creativeMimeType?: string;
+  creativeUrl?: string;
+  metadata?: Record<string, unknown>;
 }) {
   const res = await fetch(`${API_BASE}/api/campaigns`, {
     method: "POST",
@@ -79,6 +83,10 @@ export async function createCampaignRecord(input: {
       image_url: input.imageUrl,
       target_url: input.targetUrl,
       status: input.status ?? "active",
+      creative_base64: input.creativeBase64,
+      creative_mime_type: input.creativeMimeType,
+      creative_url: input.creativeUrl,
+      metadata: input.metadata,
     }),
   });
 
@@ -98,5 +106,43 @@ export async function createCampaignRecord(input: {
 
 export function mistToSui(amount: number) {
   return amount / 1_000_000_000;
+}
+
+export type Website = {
+  id: string;
+  publisherWallet: string;
+  name: string;
+  url: string;
+  category: string;
+  monthlyVisitors: number;
+  status: "pending" | "approved" | "rejected";
+  dailyImpressions: number;
+};
+
+export async function fetchWebsites(publisherWallet?: string) {
+  const params = publisherWallet ? `?publisher_wallet=${encodeURIComponent(publisherWallet)}` : "";
+  const res = await fetch(`${API_BASE}/api/websites${params}`, { cache: "no-store" });
+  return handleResponse<{ websites: Website[] }>(res);
+}
+
+export async function createWebsite(input: {
+  publisherWallet: string;
+  name: string;
+  url: string;
+  category: string;
+  monthlyVisitors: number;
+}) {
+  const res = await fetch(`${API_BASE}/api/websites`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      publisher_wallet: input.publisherWallet,
+      name: input.name,
+      url: input.url,
+      category: input.category,
+      monthly_visitors: input.monthlyVisitors,
+    }),
+  });
+  return handleResponse<Website>(res);
 }
 
