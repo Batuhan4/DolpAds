@@ -20,7 +20,6 @@ const steps = [
   { id: 2, name: "Creative Upload", description: "Banner images" },
   { id: 3, name: "Budget & Funding", description: "Set your escrow" },
 ]
-
 const defaultBannerUrl = "https://dummyimage.com/728x90/0f172a/ffffff&text=DolpAds+Leaderboard"
 
 export default function CreateCampaignPage() {
@@ -373,9 +372,7 @@ export default function CreateCampaignPage() {
                   </div>
                   <div className="flex justify-between text-sm">
                     <span className="text-muted-foreground">Total Budget</span>
-                    <span className="font-medium">
-                      {formData.budget ? `${formData.budget} SUI` : "—"}
-                    </span>
+                    <span className="font-medium">{formData.budget ? `${formData.budget} SUI` : "—"}</span>
                   </div>
                   <div className="flex justify-between text-sm">
                     <span className="text-muted-foreground">Estimated Reach</span>

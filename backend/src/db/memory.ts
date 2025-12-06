@@ -11,6 +11,7 @@ const publisherNonces = new Map<string, number>();
 const defaultCampaignImage =
   "https://dummyimage.com/728x90/0f172a/ffffff&text=DolpAds+Leaderboard";
 
+// Registers an on-chain campaign in the in-memory store (values in mist for SUI).
 export function registerCampaign(input: {
   id: string;
   suiObjectId?: string;
