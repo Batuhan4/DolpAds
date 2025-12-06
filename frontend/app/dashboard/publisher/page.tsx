@@ -6,7 +6,7 @@ import { useCurrentAccount } from "@mysten/dapp-kit"
 import { StatsCard } from "@/components/dashboard/stats-card"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { claimEarnings, fetchPublisherSummary, microsToDollars } from "@/lib/api"
+import { claimEarnings, fetchPublisherSummary, mistToSui } from "@/lib/api"
 import { DollarSign, Wallet, Eye, Loader2, PartyPopper } from "lucide-react"
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts"
 
@@ -25,15 +25,15 @@ export default function PublisherOverview() {
 
   const chartData = useMemo(() => {
     // Placeholder: mirror total earnings across a simple 7-day trend
-    const revenue = microsToDollars(data?.totalEarnings ?? 0);
+    const revenue = mistToSui(data?.totalEarnings ?? 0);
     return Array.from({ length: 7 }).map((_, idx) => ({
       date: `Day ${idx + 1}`,
       revenue: Math.max(0, revenue / 7),
     }));
   }, [data])
 
-  const availableDollars = microsToDollars(data?.availableToClaim ?? 0)
-  const totalEarnings = microsToDollars(data?.totalEarnings ?? 0)
+  const availableSui = mistToSui(data?.availableToClaim ?? 0)
+  const totalEarnings = mistToSui(data?.totalEarnings ?? 0)
   const totalAdViews = data?.totalAdViews ?? 0
 
   const handleClaim = async () => {
@@ -73,7 +73,7 @@ export default function PublisherOverview() {
               <div>
                 <p className="font-semibold text-success">Transaction Success!</p>
                 <p className="text-sm text-muted-foreground">
-                  ${availableDollars.toLocaleString(undefined, { maximumFractionDigits: 2 })} has been withdrawn.
+                  {availableSui.toLocaleString(undefined, { maximumFractionDigits: 3 })} SUI has been withdrawn.
                 </p>
               </div>
             </CardContent>
@@ -88,7 +88,7 @@ export default function PublisherOverview() {
           value={
             isLoading
               ? "Loading..."
-              : `$${availableDollars.toLocaleString(undefined, { maximumFractionDigits: 2 })}`
+              : `${availableSui.toLocaleString(undefined, { maximumFractionDigits: 3 })} SUI`
           }
           icon={Wallet}
           className="border-primary/20 bg-primary/5"
@@ -110,7 +110,7 @@ export default function PublisherOverview() {
           value={
             isLoading
               ? "Loading..."
-              : `$${totalEarnings.toLocaleString(undefined, { maximumFractionDigits: 2 })}`
+              : `${totalEarnings.toLocaleString(undefined, { maximumFractionDigits: 3 })} SUI`
           }
           icon={DollarSign}
           trend={{ value: 0, isPositive: true }}
@@ -143,7 +143,7 @@ export default function PublisherOverview() {
                     border: "1px solid hsl(var(--border))",
                     borderRadius: "8px",
                   }}
-                  formatter={(value: number) => [`$${value.toFixed(2)}`, "Revenue"]}
+                  formatter={(value: number) => [`${value.toFixed(3)} SUI`, "Revenue"]}
                 />
                 <Bar dataKey="revenue" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
               </BarChart>

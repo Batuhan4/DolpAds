@@ -54,7 +54,45 @@ export async function claimEarnings(publisher: string, campaignId: string) {
   }>(res);
 }
 
-export function microsToDollars(amount: number) {
-  return amount / 1_000_000;
+export async function createCampaignRecord(input: {
+  id: string;
+  suiObjectId?: string;
+  advertiserWallet: string;
+  totalDeposited: number;
+  cpcBid: number;
+  imageUrl?: string;
+  targetUrl?: string;
+  status?: "pending" | "active" | "paused" | "empty";
+}) {
+  const res = await fetch(`${API_BASE}/api/campaigns`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      id: input.id,
+      sui_object_id: input.suiObjectId ?? input.id,
+      advertiser_wallet: input.advertiserWallet,
+      total_deposited: input.totalDeposited,
+      cpc_bid: input.cpcBid,
+      image_url: input.imageUrl,
+      target_url: input.targetUrl,
+      status: input.status ?? "active",
+    }),
+  });
+
+  return handleResponse<{
+    id: string;
+    suiObjectId?: string;
+    advertiserWallet: string;
+    totalDeposited: number;
+    spentAmount: number;
+    cpcBid: number;
+    imageUrl: string;
+    targetUrl: string;
+    status: string;
+  }>(res);
+}
+
+export function mistToSui(amount: number) {
+  return amount / 1_000_000_000;
 }
 

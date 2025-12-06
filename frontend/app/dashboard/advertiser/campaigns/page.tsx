@@ -5,7 +5,7 @@ import { StatusBadge } from "@/components/dashboard/status-badge"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { fetchCampaigns, microsToDollars } from "@/lib/api"
+import { fetchCampaigns, mistToSui } from "@/lib/api"
 import { Pause, Pencil, Play, Trash2, ExternalLink } from "lucide-react"
 import Link from "next/link"
 
@@ -49,9 +49,9 @@ export default function CampaignsPage() {
             </TableHeader>
             <TableBody>
               {campaigns.map((campaign) => {
-                const spent = microsToDollars(campaign.spentAmount)
-                const budget = microsToDollars(campaign.totalDeposited)
-                const cpc = microsToDollars(campaign.cpcBid)
+                const spent = mistToSui(campaign.spentAmount)
+                const budget = mistToSui(campaign.totalDeposited)
+                const cpc = mistToSui(campaign.cpcBid)
                 return (
                   <TableRow key={campaign.id}>
                     <TableCell>
@@ -70,9 +70,9 @@ export default function CampaignsPage() {
                     <TableCell>
                       <StatusBadge status={campaign.status as any} />
                     </TableCell>
-                    <TableCell>${budget.toLocaleString(undefined, { maximumFractionDigits: 2 })}</TableCell>
-                    <TableCell>${spent.toLocaleString(undefined, { maximumFractionDigits: 2 })}</TableCell>
-                    <TableCell>${cpc.toFixed(4)}</TableCell>
+                    <TableCell>{budget.toLocaleString(undefined, { maximumFractionDigits: 3 })} SUI</TableCell>
+                    <TableCell>{spent.toLocaleString(undefined, { maximumFractionDigits: 3 })} SUI</TableCell>
+                    <TableCell>{cpc.toFixed(4)} SUI</TableCell>
                     <TableCell className="text-right">
                       <div className="flex items-center justify-end gap-1">
                         <Button variant="ghost" size="icon" className="h-8 w-8">

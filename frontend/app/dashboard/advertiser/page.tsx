@@ -7,7 +7,7 @@ import { StatusBadge } from "@/components/dashboard/status-badge"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { fetchCampaigns, microsToDollars } from "@/lib/api"
+import { fetchCampaigns, mistToSui } from "@/lib/api"
 import { DollarSign, Eye, MousePointer, TrendingUp, Pause, Pencil } from "lucide-react"
 import Link from "next/link"
 
@@ -22,7 +22,7 @@ export default function AdvertiserOverview() {
 
   const aggregates = useMemo(() => {
     if (!stats) return { budget: 0, impressions: 0, clicks: 0, ctr: 0 }
-    const budget = microsToDollars(stats.totalDeposited)
+    const budget = mistToSui(stats.totalDeposited)
     const impressions = stats.totalImpressions
     const clicks = stats.totalClicks
     const ctr = impressions > 0 ? (clicks / impressions) * 100 : 0
@@ -40,7 +40,11 @@ export default function AdvertiserOverview() {
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <StatsCard
           title="Total Budget Locked"
-          value={isLoading ? "Loading..." : `$${aggregates.budget.toLocaleString(undefined, { maximumFractionDigits: 2 })}`}
+          value={
+            isLoading
+              ? "Loading..."
+              : `${aggregates.budget.toLocaleString(undefined, { maximumFractionDigits: 3 })} SUI`
+          }
           icon={DollarSign}
           trend={{ value: 0, isPositive: true }}
         />
@@ -89,9 +93,9 @@ export default function AdvertiserOverview() {
             </TableHeader>
             <TableBody>
               {campaigns.map((campaign) => {
-                const spent = microsToDollars(campaign.spentAmount);
-                const budget = microsToDollars(campaign.totalDeposited);
-                const cpc = microsToDollars(campaign.cpcBid);
+                const spent = mistToSui(campaign.spentAmount);
+                const budget = mistToSui(campaign.totalDeposited);
+                const cpc = mistToSui(campaign.cpcBid);
                 return (
                   <TableRow key={campaign.id}>
                     <TableCell className="font-medium">{campaign.id}</TableCell>
@@ -99,10 +103,10 @@ export default function AdvertiserOverview() {
                       <StatusBadge status={campaign.status as any} />
                     </TableCell>
                     <TableCell>
-                      ${spent.toLocaleString(undefined, { maximumFractionDigits: 2 })} / $
-                      {budget.toLocaleString(undefined, { maximumFractionDigits: 2 })}
+                      {spent.toLocaleString(undefined, { maximumFractionDigits: 3 })} SUI /{" "}
+                      {budget.toLocaleString(undefined, { maximumFractionDigits: 3 })} SUI
                     </TableCell>
-                    <TableCell>${cpc.toFixed(4)}</TableCell>
+                    <TableCell>{cpc.toFixed(4)} SUI</TableCell>
                     <TableCell className="text-right">
                       <div className="flex items-center justify-end gap-2">
                         <Button variant="ghost" size="icon" className="h-8 w-8">

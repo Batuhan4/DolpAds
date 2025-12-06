@@ -8,13 +8,13 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
-import { claimEarnings, fetchPublisherSummary, microsToDollars } from "@/lib/api"
+import { claimEarnings, fetchPublisherSummary, mistToSui } from "@/lib/api"
 import { Wallet, DollarSign, Clock, Loader2, PartyPopper } from "lucide-react"
 
 const DEFAULT_CAMPAIGN_ID = process.env.NEXT_PUBLIC_CAMPAIGN_ID ?? "demo-campaign"
 
 const payoutHistory = [
-  { id: "1", date: "2025-01-05", amount: 520.0, status: "completed", txHash: "0x1a2b...3c4d" },
+  { id: "1", date: "2025-01-05", amount: 5.2, status: "completed", txHash: "0x1a2b...3c4d" },
 ]
 
 export default function PayoutsPage() {
@@ -28,8 +28,8 @@ export default function PayoutsPage() {
     enabled: !!account?.address,
   })
 
-  const available = microsToDollars(data?.availableToClaim ?? 0)
-  const totalEarnings = microsToDollars(data?.totalEarnings ?? 0)
+  const available = mistToSui(data?.availableToClaim ?? 0)
+  const totalEarnings = mistToSui(data?.totalEarnings ?? 0)
   const totalClaimed = Math.max(0, totalEarnings - available)
 
   const handleClaim = async () => {
@@ -69,7 +69,7 @@ export default function PayoutsPage() {
               <div>
                 <p className="font-semibold text-success">Transaction Success!</p>
                 <p className="text-sm text-muted-foreground">
-                  ${available.toLocaleString(undefined, { maximumFractionDigits: 2 })} has been withdrawn.
+                  {available.toLocaleString(undefined, { maximumFractionDigits: 3 })} SUI has been withdrawn.
                 </p>
               </div>
             </CardContent>
@@ -84,7 +84,7 @@ export default function PayoutsPage() {
           value={
             isLoading
               ? "Loading..."
-              : `$${available.toLocaleString(undefined, { maximumFractionDigits: 2 })}`
+              : `${available.toLocaleString(undefined, { maximumFractionDigits: 3 })} SUI`
           }
           icon={Wallet}
           className="border-primary/20 bg-primary/5"
@@ -106,11 +106,11 @@ export default function PayoutsPage() {
           value={
             isLoading
               ? "Loading..."
-              : `$${totalClaimed.toLocaleString(undefined, { maximumFractionDigits: 2 })}`
+              : `${totalClaimed.toLocaleString(undefined, { maximumFractionDigits: 3 })} SUI`
           }
           icon={DollarSign}
         />
-        <StatsCard title="Pending" value="$0.00" icon={Clock} description="No pending payouts" />
+        <StatsCard title="Pending" value="0 SUI" icon={Clock} description="No pending payouts" />
       </div>
 
       {/* Payout History */}
@@ -134,7 +134,7 @@ export default function PayoutsPage() {
               {payoutHistory.map((payout) => (
                 <TableRow key={payout.id}>
                   <TableCell>{payout.date}</TableCell>
-                  <TableCell className="font-medium">${payout.amount.toFixed(2)}</TableCell>
+                  <TableCell className="font-medium">{payout.amount.toFixed(3)} SUI</TableCell>
                   <TableCell>
                     <Badge variant="outline" className="bg-success/10 text-success border-success/20 gap-1.5">
                       <span className="w-1.5 h-1.5 rounded-full bg-current" />

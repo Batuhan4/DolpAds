@@ -11,15 +11,41 @@ const publisherNonces = new Map<string, number>();
 const defaultCampaignImage =
   "https://dummyimage.com/728x90/0f172a/ffffff&text=DolpAds+Leaderboard";
 
+export function registerCampaign(input: {
+  id: string;
+  suiObjectId?: string;
+  advertiserWallet: string;
+  totalDeposited: number;
+  cpcBid: number;
+  imageUrl?: string;
+  targetUrl?: string;
+  status?: CampaignStatus;
+}) {
+  const campaign: Campaign = {
+    id: input.id,
+    suiObjectId: input.suiObjectId ?? input.id,
+    advertiserWallet: input.advertiserWallet,
+    totalDeposited: input.totalDeposited,
+    spentAmount: 0,
+    cpcBid: input.cpcBid,
+    imageUrl: input.imageUrl ?? defaultCampaignImage,
+    targetUrl: input.targetUrl ?? "https://dolpads.com",
+    status: input.status ?? "active",
+  };
+
+  campaigns.set(campaign.id, campaign);
+  return campaign;
+}
+
 export function seedCampaign(input: Partial<Campaign> & { id?: string }) {
   const id = input.id ?? uuid();
   const merged: Campaign = {
     id,
     suiObjectId: input.suiObjectId,
     advertiserWallet: input.advertiserWallet ?? "0x_advertiser",
-    totalDeposited: input.totalDeposited ?? 5_000_000, // micro USDC
+    totalDeposited: input.totalDeposited ?? 5_000_000_000, // 5 SUI in mist
     spentAmount: input.spentAmount ?? 0,
-    cpcBid: input.cpcBid ?? 100_000, // 0.1 USDC in micros
+    cpcBid: input.cpcBid ?? 100_000_000, // 0.1 SUI in mist
     imageUrl: input.imageUrl ?? defaultCampaignImage,
     targetUrl: input.targetUrl ?? "https://dolpads.com",
     status: input.status ?? "active",

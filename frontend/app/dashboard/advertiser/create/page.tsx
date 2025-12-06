@@ -3,11 +3,14 @@
 import type React from "react"
 
 import { useState } from "react"
+import { useCurrentAccount, useSignAndExecuteTransaction } from "@mysten/dapp-kit"
+import { Transaction } from "@mysten/sui/transactions"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { createCampaignRecord } from "@/lib/api"
 import { cn } from "@/lib/utils"
 import { Check, Upload, ArrowRight, ArrowLeft, Loader2, PartyPopper } from "lucide-react"
 import { useRouter } from "next/navigation"
@@ -18,11 +21,16 @@ const steps = [
   { id: 3, name: "Budget & Funding", description: "Set your escrow" },
 ]
 
+const defaultBannerUrl = "https://dummyimage.com/728x90/0f172a/ffffff&text=DolpAds+Leaderboard"
+
 export default function CreateCampaignPage() {
   const router = useRouter()
+  const account = useCurrentAccount()
+  const { mutateAsync: signAndExecuteTransaction } = useSignAndExecuteTransaction()
   const [currentStep, setCurrentStep] = useState(1)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [showSuccess, setShowSuccess] = useState(false)
+  const [error, setError] = useState<string | null>(null)
   const [formData, setFormData] = useState({
     name: "",
     destinationUrl: "",
@@ -33,6 +41,7 @@ export default function CreateCampaignPage() {
     maxBid: "",
   })
   const [uploadedFile, setUploadedFile] = useState<File | null>(null)
+  const packageId = process.env.NEXT_PUBLIC_PACKAGE_ID
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }))
@@ -52,14 +61,81 @@ export default function CreateCampaignPage() {
     if (currentStep > 1) setCurrentStep(currentStep - 1)
   }
 
+  const toMist = (value: string) => {
+    const num = Number(value)
+    if (!Number.isFinite(num) || num <= 0) return null
+    return BigInt(Math.floor(num * 1_000_000_000))
+  }
+
   const handleSubmit = async () => {
+    if (!packageId) {
+      setError("NEXT_PUBLIC_PACKAGE_ID is not set. Add it to your env.")
+      return
+    }
+    if (!account?.address) {
+      setError("Connect your Sui wallet to create a campaign.")
+      return
+    }
+
+    const budgetMist = toMist(formData.budget)
+    if (budgetMist === null) {
+      setError("Enter a valid budget in SUI.")
+      return
+    }
+
+    const parsedBid = toMist(formData.maxBid)
+    const fallbackBid = budgetMist / 100n
+    const cpcBidMist = parsedBid && parsedBid > 0n ? parsedBid : fallbackBid > 0n ? fallbackBid : 1n
+
     setIsSubmitting(true)
-    await new Promise((resolve) => setTimeout(resolve, 2000))
-    setShowSuccess(true)
-    setIsSubmitting(false)
-    setTimeout(() => {
-      router.push("/dashboard/advertiser")
-    }, 2000)
+    setError(null)
+    try {
+      const tx = new Transaction()
+      tx.setGasBudget(50_000_000)
+      const [budgetCoin] = tx.splitCoins(tx.gas, [tx.pure.u64(budgetMist)])
+      tx.moveCall({
+        target: `${packageId}::core::create_campaign`,
+        arguments: [budgetCoin],
+      })
+
+      const result = await signAndExecuteTransaction({
+        transaction: tx,
+        options: { showEffects: true, showObjectChanges: true },
+      })
+
+      const created = result.objectChanges?.find(
+        (change) =>
+          change.type === "created" &&
+          "objectType" in change &&
+          typeof change.objectType === "string" &&
+          change.objectType.includes("::core::Campaign"),
+      ) as { objectId?: string } | undefined
+
+      const campaignId = created?.objectId
+      if (!campaignId) {
+        throw new Error("Could not find campaign object id from transaction.")
+      }
+
+      await createCampaignRecord({
+        id: campaignId,
+        suiObjectId: campaignId,
+        advertiserWallet: account.address,
+        totalDeposited: Number(budgetMist),
+        cpcBid: Number(cpcBidMist),
+        imageUrl: defaultBannerUrl,
+        targetUrl: formData.destinationUrl || "https://dolpads.com",
+        status: "active",
+      })
+
+      setShowSuccess(true)
+      setTimeout(() => {
+        router.push("/dashboard/advertiser/campaigns")
+      }, 1500)
+    } catch (err: any) {
+      setError(err?.message ?? "Failed to create campaign. Please try again.")
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   const estimatedReach = formData.budget ? Math.floor(Number(formData.budget) * 15) : 0
@@ -258,23 +334,23 @@ export default function CreateCampaignPage() {
             <>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="budget">Total Budget (USDC)</Label>
+                <Label htmlFor="budget">Total Budget (SUI)</Label>
                   <Input
                     id="budget"
                     name="budget"
                     type="number"
-                    placeholder="1000"
+                  placeholder="5"
                     value={formData.budget}
                     onChange={handleInputChange}
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="maxBid">Max Bid (CPC/CPM)</Label>
+                <Label htmlFor="maxBid">Max Bid (SUI per click)</Label>
                   <Input
                     id="maxBid"
                     name="maxBid"
                     type="number"
-                    placeholder="0.50"
+                  placeholder="0.1"
                     value={formData.maxBid}
                     onChange={handleInputChange}
                   />
@@ -297,7 +373,9 @@ export default function CreateCampaignPage() {
                   </div>
                   <div className="flex justify-between text-sm">
                     <span className="text-muted-foreground">Total Budget</span>
-                    <span className="font-medium">{formData.budget ? `$${formData.budget} USDC` : "—"}</span>
+                    <span className="font-medium">
+                      {formData.budget ? `${formData.budget} SUI` : "—"}
+                    </span>
                   </div>
                   <div className="flex justify-between text-sm">
                     <span className="text-muted-foreground">Estimated Reach</span>
@@ -309,6 +387,8 @@ export default function CreateCampaignPage() {
               </Card>
             </>
           )}
+
+          {error && <p className="text-sm text-destructive">{error}</p>}
 
           {/* Navigation Buttons */}
           <div className="flex items-center justify-between pt-4 border-t border-border">
@@ -323,7 +403,7 @@ export default function CreateCampaignPage() {
                 <ArrowRight className="h-4 w-4 ml-2" />
               </Button>
             ) : (
-              <Button onClick={handleSubmit} disabled={isSubmitting}>
+              <Button onClick={handleSubmit} disabled={isSubmitting || !account?.address}>
                 {isSubmitting ? (
                   <>
                     <Loader2 className="h-4 w-4 mr-2 animate-spin" />
