@@ -1,6 +1,6 @@
 "use client"
 
-import { useSuiWallet } from "@/lib/sui-wallet-provider"
+import { useConnectWallet, useCurrentAccount, useDisconnectWallet, useWallets } from "@mysten/dapp-kit"
 import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
@@ -27,7 +27,10 @@ interface ConnectWalletButtonProps {
 }
 
 export function ConnectWalletButton({ variant = "default", size = "default", className }: ConnectWalletButtonProps) {
-  const { isConnected, isConnecting, currentAccount, wallets, connect, disconnect } = useSuiWallet()
+  const account = useCurrentAccount()
+  const wallets = useWallets()
+  const { mutateAsync: connectWallet, isPending: isConnecting } = useConnectWallet()
+  const { mutate: disconnect } = useDisconnectWallet()
   const [copied, setCopied] = useState(false)
   const [dialogOpen, setDialogOpen] = useState(false)
 
@@ -44,12 +47,14 @@ export function ConnectWalletButton({ variant = "default", size = "default", cla
   }
 
   const handleConnect = async (walletName: string) => {
-    await connect(walletName)
+    const wallet = wallets.find((w) => w.name === walletName)
+    if (!wallet) return
+    await connectWallet({ wallet })
     setDialogOpen(false)
   }
 
   // Not connected - show connect dialog
-  if (!isConnected) {
+  if (!account) {
     return (
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogTrigger asChild>
@@ -108,14 +113,14 @@ export function ConnectWalletButton({ variant = "default", size = "default", cla
       <DropdownMenuTrigger asChild>
         <Button variant="outline" size={size} className={className}>
           <Wallet className="mr-2 h-4 w-4 text-primary" />
-          <span className="font-mono">{formatAddress(currentAccount?.address || "")}</span>
+          <span className="font-mono">{formatAddress(account.address)}</span>
           <ChevronDown className="ml-2 h-4 w-4" />
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-64">
         <div className="px-3 py-2">
           <p className="text-xs text-muted-foreground mb-1">Connected Wallet</p>
-          <p className="font-mono text-sm break-all">{currentAccount?.address}</p>
+          <p className="font-mono text-sm break-all">{account.address}</p>
         </div>
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={handleCopyAddress} className="cursor-pointer">

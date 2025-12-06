@@ -3,12 +3,12 @@
 import { Button } from "@/components/ui/button"
 import { ArrowRight, Waves } from "lucide-react"
 import { useRouter } from "next/navigation"
-import { useSuiWallet } from "@/lib/sui-wallet-provider"
+import { useCurrentAccount } from "@mysten/dapp-kit"
 import { ConnectWalletButton } from "@/components/connect-wallet-button"
 
 export function HeroSection() {
   const router = useRouter()
-  const { isConnected } = useSuiWallet()
+  const account = useCurrentAccount()
 
   const handleLaunchApp = () => {
     router.push("/dashboard/advertiser")
@@ -37,7 +37,7 @@ export function HeroSection() {
         </p>
 
         <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
-          {isConnected ? (
+          {account ? (
             <Button size="lg" className="gap-2 h-12 px-8 text-base" onClick={handleLaunchApp}>
               Launch App
               <ArrowRight className="h-4 w-4" />

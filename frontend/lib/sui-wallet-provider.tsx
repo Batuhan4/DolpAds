@@ -1,86 +1,28 @@
 "use client"
 
-import { createContext, useContext, useState, useCallback, type ReactNode } from "react"
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
+import { ReactNode, useMemo } from "react"
+import { createNetworkConfig, SuiClientProvider, WalletProvider } from "@mysten/dapp-kit"
 
-// Types for wallet state
-interface WalletAccount {
-  address: string
-  publicKey: Uint8Array | null
-}
+const { networkConfig } = createNetworkConfig({
+  testnet: { url: "https://fullnode.testnet.sui.io:443" },
+  mainnet: { url: "https://fullnode.mainnet.sui.io:443" },
+})
 
-interface WalletInfo {
-  name: string
-  icon: string
-}
-
-interface SuiWalletContextType {
-  // Connection state
-  isConnected: boolean
-  isConnecting: boolean
-  currentAccount: WalletAccount | null
-  // Available wallets (mock for now)
-  wallets: WalletInfo[]
-  // Actions
-  connect: (walletName?: string) => Promise<void>
-  disconnect: () => void
-}
-
-const SuiWalletContext = createContext<SuiWalletContextType | undefined>(undefined)
-
-// Mock wallets that would be detected
-const MOCK_WALLETS: WalletInfo[] = [
-  { name: "Sui Wallet", icon: "https://sui.io/favicon.ico" },
-  { name: "Suiet", icon: "https://suiet.app/favicon.ico" },
-  { name: "Ethos Wallet", icon: "https://ethoswallet.xyz/favicon.ico" },
-]
+const queryClient = new QueryClient()
 
 export function SuiWalletProvider({ children }: { children: ReactNode }) {
-  const [isConnected, setIsConnected] = useState(false)
-  const [isConnecting, setIsConnecting] = useState(false)
-  const [currentAccount, setCurrentAccount] = useState<WalletAccount | null>(null)
-
-  const connect = useCallback(async (walletName?: string) => {
-    setIsConnecting(true)
-
-    // Simulate connection delay
-    await new Promise((resolve) => setTimeout(resolve, 500))
-
-    // Generate a mock Sui address (0x prefix + 64 hex chars)
-    const mockAddress = `0x${Array.from({ length: 64 }, () => Math.floor(Math.random() * 16).toString(16)).join("")}`
-
-    setCurrentAccount({
-      address: mockAddress,
-      publicKey: null,
-    })
-    setIsConnected(true)
-    setIsConnecting(false)
-  }, [])
-
-  const disconnect = useCallback(() => {
-    setCurrentAccount(null)
-    setIsConnected(false)
-  }, [])
+  // Allow switching via env, default to testnet
+  const defaultNetwork = useMemo(
+    () => (process.env.NEXT_PUBLIC_SUI_NETWORK as "testnet" | "mainnet" | undefined) ?? "testnet",
+    [],
+  )
 
   return (
-    <SuiWalletContext.Provider
-      value={{
-        isConnected,
-        isConnecting,
-        currentAccount,
-        wallets: MOCK_WALLETS,
-        connect,
-        disconnect,
-      }}
-    >
-      {children}
-    </SuiWalletContext.Provider>
+    <QueryClientProvider client={queryClient}>
+      <SuiClientProvider networks={networkConfig} defaultNetwork={defaultNetwork}>
+        <WalletProvider autoConnect>{children}</WalletProvider>
+      </SuiClientProvider>
+    </QueryClientProvider>
   )
-}
-
-export function useSuiWallet() {
-  const context = useContext(SuiWalletContext)
-  if (context === undefined) {
-    throw new Error("useSuiWallet must be used within a SuiWalletProvider")
-  }
-  return context
 }

@@ -5,11 +5,11 @@ import { ConnectWalletButton } from "@/components/connect-wallet-button"
 import { Waves } from "lucide-react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { useSuiWallet } from "@/lib/sui-wallet-provider"
+import { useCurrentAccount } from "@mysten/dapp-kit"
 
 export function Navbar() {
   const router = useRouter()
-  const { isConnected } = useSuiWallet()
+  const account = useCurrentAccount()
 
   const handleLaunchApp = () => {
     router.push("/dashboard/advertiser")
@@ -38,7 +38,7 @@ export function Navbar() {
         </nav>
 
         <div className="flex items-center gap-3">
-          {isConnected ? (
+          {account ? (
             <>
               <ConnectWalletButton variant="outline" size="sm" />
               <Button onClick={handleLaunchApp}>Launch App</Button>

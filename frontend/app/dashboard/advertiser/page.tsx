@@ -1,17 +1,33 @@
 "use client"
 
+import { useMemo } from "react"
+import { useQuery } from "@tanstack/react-query"
 import { StatsCard } from "@/components/dashboard/stats-card"
 import { StatusBadge } from "@/components/dashboard/status-badge"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { mockAdvertiserAnalytics, mockCampaigns } from "@/lib/mock-data"
+import { fetchCampaigns, microsToDollars } from "@/lib/api"
 import { DollarSign, Eye, MousePointer, TrendingUp, Pause, Pencil } from "lucide-react"
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts"
 import Link from "next/link"
 
 export default function AdvertiserOverview() {
-  const { totalBudgetLocked, totalImpressions, totalClicks, avgCtr, chartData } = mockAdvertiserAnalytics
+  const { data, isLoading, isError } = useQuery({
+    queryKey: ["campaigns"],
+    queryFn: fetchCampaigns,
+  })
+
+  const campaigns = data?.campaigns ?? []
+  const stats = data?.stats
+
+  const aggregates = useMemo(() => {
+    if (!stats) return { budget: 0, impressions: 0, clicks: 0, ctr: 0 }
+    const budget = microsToDollars(stats.totalDeposited)
+    const impressions = stats.totalImpressions
+    const clicks = stats.totalClicks
+    const ctr = impressions > 0 ? (clicks / impressions) * 100 : 0
+    return { budget, impressions, clicks, ctr }
+  }, [stats])
 
   return (
     <div className="space-y-6">
@@ -24,73 +40,29 @@ export default function AdvertiserOverview() {
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <StatsCard
           title="Total Budget Locked"
-          value={`$${totalBudgetLocked.toLocaleString()}`}
+          value={isLoading ? "Loading..." : `$${aggregates.budget.toLocaleString(undefined, { maximumFractionDigits: 2 })}`}
           icon={DollarSign}
-          trend={{ value: 12, isPositive: true }}
+          trend={{ value: 0, isPositive: true }}
         />
         <StatsCard
           title="Total Impressions"
-          value={totalImpressions.toLocaleString()}
+          value={isLoading ? "Loading..." : aggregates.impressions.toLocaleString()}
           icon={Eye}
-          trend={{ value: 8, isPositive: true }}
+          trend={{ value: 0, isPositive: true }}
         />
         <StatsCard
           title="Total Clicks"
-          value={totalClicks.toLocaleString()}
+          value={isLoading ? "Loading..." : aggregates.clicks.toLocaleString()}
           icon={MousePointer}
-          trend={{ value: 5, isPositive: true }}
+          trend={{ value: 0, isPositive: true }}
         />
-        <StatsCard title="Avg. CTR" value={`${avgCtr}%`} icon={TrendingUp} trend={{ value: 0.3, isPositive: true }} />
+        <StatsCard
+          title="Avg. CTR"
+          value={isLoading ? "Loading..." : `${aggregates.ctr.toFixed(2)}%`}
+          icon={TrendingUp}
+          trend={{ value: 0, isPositive: true }}
+        />
       </div>
-
-      {/* Chart */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Clicks & Impressions</CardTitle>
-          <CardDescription>Performance over the last 7 days</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="h-80">
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={chartData}>
-                <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
-                <XAxis dataKey="date" className="text-xs" tick={{ fill: "hsl(var(--muted-foreground))" }} />
-                <YAxis yAxisId="left" className="text-xs" tick={{ fill: "hsl(var(--muted-foreground))" }} />
-                <YAxis
-                  yAxisId="right"
-                  orientation="right"
-                  className="text-xs"
-                  tick={{ fill: "hsl(var(--muted-foreground))" }}
-                />
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: "hsl(var(--card))",
-                    border: "1px solid hsl(var(--border))",
-                    borderRadius: "8px",
-                  }}
-                />
-                <Legend />
-                <Line
-                  yAxisId="left"
-                  type="monotone"
-                  dataKey="impressions"
-                  stroke="hsl(var(--primary))"
-                  strokeWidth={2}
-                  dot={false}
-                />
-                <Line
-                  yAxisId="right"
-                  type="monotone"
-                  dataKey="clicks"
-                  stroke="hsl(var(--accent))"
-                  strokeWidth={2}
-                  dot={false}
-                />
-              </LineChart>
-            </ResponsiveContainer>
-          </div>
-        </CardContent>
-      </Card>
 
       {/* Recent Campaigns Table */}
       <Card>
@@ -104,41 +76,53 @@ export default function AdvertiserOverview() {
           </Button>
         </CardHeader>
         <CardContent>
+          {isError && <p className="text-sm text-destructive">Failed to load campaigns.</p>}
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Campaign Name</TableHead>
+                <TableHead>Campaign ID</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Spent / Budget</TableHead>
-                <TableHead>Clicks</TableHead>
-                <TableHead>CTR</TableHead>
+                <TableHead>Bid (CPC)</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {mockCampaigns.map((campaign) => (
-                <TableRow key={campaign.id}>
-                  <TableCell className="font-medium">{campaign.name}</TableCell>
-                  <TableCell>
-                    <StatusBadge status={campaign.status} />
-                  </TableCell>
-                  <TableCell>
-                    ${campaign.spent.toLocaleString()} / ${campaign.budget.toLocaleString()}
-                  </TableCell>
-                  <TableCell>{campaign.clicks.toLocaleString()}</TableCell>
-                  <TableCell>{campaign.ctr}%</TableCell>
-                  <TableCell className="text-right">
-                    <div className="flex items-center justify-end gap-2">
-                      <Button variant="ghost" size="icon" className="h-8 w-8">
-                        <Pencil className="h-4 w-4" />
-                      </Button>
-                      <Button variant="ghost" size="icon" className="h-8 w-8">
-                        <Pause className="h-4 w-4" />
-                      </Button>
-                    </div>
+              {campaigns.map((campaign) => {
+                const spent = microsToDollars(campaign.spentAmount);
+                const budget = microsToDollars(campaign.totalDeposited);
+                const cpc = microsToDollars(campaign.cpcBid);
+                return (
+                  <TableRow key={campaign.id}>
+                    <TableCell className="font-medium">{campaign.id}</TableCell>
+                    <TableCell>
+                      <StatusBadge status={campaign.status as any} />
+                    </TableCell>
+                    <TableCell>
+                      ${spent.toLocaleString(undefined, { maximumFractionDigits: 2 })} / $
+                      {budget.toLocaleString(undefined, { maximumFractionDigits: 2 })}
+                    </TableCell>
+                    <TableCell>${cpc.toFixed(4)}</TableCell>
+                    <TableCell className="text-right">
+                      <div className="flex items-center justify-end gap-2">
+                        <Button variant="ghost" size="icon" className="h-8 w-8">
+                          <Pencil className="h-4 w-4" />
+                        </Button>
+                        <Button variant="ghost" size="icon" className="h-8 w-8">
+                          <Pause className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
+              {!isLoading && campaigns.length === 0 && (
+                <TableRow>
+                  <TableCell colSpan={5} className="text-center text-muted-foreground">
+                    No campaigns yet.
                   </TableCell>
                 </TableRow>
-              ))}
+              )}
             </TableBody>
           </Table>
         </CardContent>

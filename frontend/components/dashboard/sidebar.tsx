@@ -3,7 +3,7 @@
 import { useEffect } from "react"
 import { cn } from "@/lib/utils"
 import { useApp } from "@/lib/context"
-import { useSuiWallet } from "@/lib/sui-wallet-provider"
+import { useCurrentAccount, useDisconnectWallet } from "@mysten/dapp-kit"
 import { Button } from "@/components/ui/button"
 import { Switch } from "@/components/ui/switch"
 import { Label } from "@/components/ui/label"
@@ -29,7 +29,8 @@ export function Sidebar() {
   const pathname = usePathname()
   const router = useRouter()
   const { role, setRole, wallet } = useApp()
-  const { isConnected, currentAccount, disconnect } = useSuiWallet()
+  const currentAccount = useCurrentAccount()
+  const { mutate: disconnect } = useDisconnectWallet()
 
   useEffect(() => {
     if (pathname.includes("/dashboard/publisher")) {
@@ -116,7 +117,7 @@ export function Sidebar() {
 
       {/* Wallet Info & Logout */}
       <div className="p-4 border-t border-sidebar-border space-y-3">
-        {isConnected && currentAccount && (
+        {currentAccount && (
           <div className="rounded-lg bg-sidebar-accent p-3">
             <div className="text-xs text-sidebar-foreground/60 mb-1">Connected Wallet</div>
             <div className="text-sm font-mono text-sidebar-foreground truncate">

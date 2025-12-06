@@ -1,7 +1,7 @@
 "use client"
 
 import { createContext, useContext, useState, useEffect, type ReactNode } from "react"
-import { useSuiWallet } from "@/lib/sui-wallet-provider"
+import { useCurrentAccount } from "@mysten/dapp-kit"
 
 export type UserRole = "advertiser" | "publisher"
 
@@ -21,7 +21,7 @@ const AppContext = createContext<AppContextType | undefined>(undefined)
 
 export function AppProvider({ children }: { children: ReactNode }) {
   const [role, setRole] = useState<UserRole>("advertiser")
-  const { isConnected, currentAccount } = useSuiWallet()
+  const currentAccount = useCurrentAccount()
 
   const [wallet, setWallet] = useState<WalletState>({
     address: null,
@@ -30,10 +30,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
   })
 
   useEffect(() => {
-    if (isConnected && currentAccount) {
+    if (currentAccount?.address) {
       setWallet({
         address: `${currentAccount.address.slice(0, 6)}...${currentAccount.address.slice(-4)}`,
-        balance: 12450.5, // Mock balance for display purposes
+        balance: 0,
         isConnected: true,
       })
     } else {
@@ -43,7 +43,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         isConnected: false,
       })
     }
-  }, [isConnected, currentAccount])
+  }, [currentAccount])
 
   return <AppContext.Provider value={{ role, setRole, wallet }}>{children}</AppContext.Provider>
 }
