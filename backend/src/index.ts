@@ -19,8 +19,17 @@ import { statusRouter } from "./routes/status.js";
 
 const app = express();
 
-app.use(cors());
-app.use(express.json());
+// Allow cross-origin loader requests with credentials (sendBeacon includes cookies).
+app.use(
+  cors({
+    origin: true, // reflect request origin
+    credentials: true,
+  }),
+);
+// Allow larger JSON payloads for creative uploads (default is 100kb).
+app.use(express.json({ limit: "10mb" }));
+// Also parse text/plain bodies (sendBeacon may send as text/plain)
+app.use(express.text({ type: "text/plain" }));
 app.use(morgan("dev"));
 app.use(express.static(path.join(process.cwd(), "public")));
 

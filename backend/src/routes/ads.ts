@@ -68,7 +68,17 @@ adsRouter.post("/track", (req, res) => {
     return res.status(429).json({ error: "Rate limit exceeded" });
   }
 
-  const parsed = trackBody.safeParse(req.body);
+  // Handle both JSON body and text body (sendBeacon may send as text/plain)
+  let body = req.body;
+  if (typeof body === "string") {
+    try {
+      body = JSON.parse(body);
+    } catch {
+      return res.status(400).json({ error: "Invalid JSON in text body" });
+    }
+  }
+
+  const parsed = trackBody.safeParse(body);
   if (!parsed.success) {
     return res.status(400).json({ error: parsed.error.flatten() });
   }

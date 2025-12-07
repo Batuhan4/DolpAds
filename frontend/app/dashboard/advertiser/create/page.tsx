@@ -34,6 +34,22 @@ const base64ToHex = (b64: string) => {
   }
 }
 
+const fileToBase64 = (file: File) =>
+  new Promise<string>((resolve, reject) => {
+    const reader = new FileReader()
+    reader.onload = () => {
+      const result = reader.result
+      if (typeof result === "string") {
+        const base64 = result.split(",")[1]
+        resolve(base64 ?? "")
+      } else {
+        reject(new Error("Failed to read file"))
+      }
+    }
+    reader.onerror = () => reject(reader.error ?? new Error("Failed to read file"))
+    reader.readAsDataURL(file)
+  })
+
 const extractCampaignId = (resp: any) => {
   if (!resp) return undefined
 
@@ -207,8 +223,7 @@ export default function CreateCampaignPage() {
       let creativeMime: string | undefined
 
       if (uploadedFile) {
-        const buffer = await uploadedFile.arrayBuffer()
-        creativeBase64 = btoa(String.fromCharCode(...new Uint8Array(buffer)))
+        creativeBase64 = await fileToBase64(uploadedFile)
         creativeMime = uploadedFile.type || "image/png"
       }
 

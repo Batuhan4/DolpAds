@@ -22,7 +22,7 @@ import { Plus, ExternalLink, Check } from "lucide-react"
 
 export default function WebsitesPage() {
   const publisherWallet = useMemo(
-    () => process.env.NEXT_PUBLIC_PUBLISHER_WALLET ?? "0x_publisher_demo",
+    () => process.env.NEXT_PUBLIC_PUBLISHER_WALLET ?? "0x0000000000000000000000000000000000000000000000000000000000000001",
     [],
   )
   const [websites, setWebsites] = useState<Website[]>([])

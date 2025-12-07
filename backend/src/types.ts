@@ -24,6 +24,8 @@ export interface PendingDelivery {
   campaignId: string;
   publisherWallet: string;
   cpcBid: number;
+  viewRecorded?: boolean;
+  clickRecorded?: boolean;
 }
 
 export interface Impression {

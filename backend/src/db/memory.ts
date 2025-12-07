@@ -119,6 +119,11 @@ export function recordImpression(
   const delivery = deliveries.get(trackingId);
   if (!delivery) return null;
 
+  // Check if we already recorded this event type for this tracking ID
+  // to prevent double-counting
+  if (eventType === "view" && delivery.viewRecorded) return null;
+  if (eventType === "click" && delivery.clickRecorded) return null;
+
   const campaign = campaigns.get(delivery.campaignId);
   if (!campaign) return null;
 
@@ -136,7 +141,15 @@ export function recordImpression(
   };
 
   impressions.push(impression);
-  deliveries.delete(trackingId);
+  
+  // Mark the event as recorded instead of deleting immediately
+  if (eventType === "view") {
+    delivery.viewRecorded = true;
+  } else if (eventType === "click") {
+    delivery.clickRecorded = true;
+    // Only delete the delivery after click (user interaction complete)
+    deliveries.delete(trackingId);
+  }
 
   campaign.spentAmount += cost;
   if (campaign.spentAmount >= campaign.totalDeposited) {

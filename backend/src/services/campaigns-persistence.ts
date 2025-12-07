@@ -61,7 +61,10 @@ export async function loadCampaigns(): Promise<Campaign[]> {
 
 export async function persistCampaigns(campaigns: Campaign[]) {
   // ALWAYS save to local file first - this is reliable
-  await saveLocalState("campaigns.json", campaigns);
+  const localPath = await saveLocalState("campaigns.json", campaigns);
+  const localPointer = filePointer(localPath);
+  latestBlobId = localPointer;
+  await saveBlobPointer("campaigns", localPointer);
   console.log(`[campaigns-persistence] Saved ${campaigns.length} campaigns to local file`);
 
   // Then try Walrus as backup (optional, don't fail if it doesn't work)

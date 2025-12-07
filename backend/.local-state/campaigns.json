@@ -4,7 +4,7 @@
     "id": "demo-campaign",
     "advertiserWallet": "0x_advertiser_demo",
     "totalDeposited": 10000000,
-    "spentAmount": 0,
+    "spentAmount": 570000,
     "cpcBid": 150000,
     "imageUrl": "https://dummyimage.com/728x90/134e4a/ffffff&text=DolpAds+Demo",
     "targetUrl": "https://dolpads.com",
@@ -26,5 +26,39 @@
     "walrusCreativeObjectId": "0x29d8f25a00f2fff1e75de064ffdad97c783d3c7d8ab50652a52e75d9bbad46f2",
     "walrusMetadataBlobId": "KgaCvEqyOadZQX-uzSW2lt3mWjRMjreR9Um1bZS1ym4",
     "walrusMetadataObjectId": "0x2e75fa8d22439dbc4f5e4c5dfebffdcc05b5e19b65b5d182ed9bc61cf7f02f57"
+  },
+  {
+    "name": "sariyer kola",
+    "id": "0x9a5e94cc86a19c20b9d0732a24593b14139f2bf7c27089a1b9384cb57d47ecd8",
+    "suiObjectId": "0x9a5e94cc86a19c20b9d0732a24593b14139f2bf7c27089a1b9384cb57d47ecd8",
+    "advertiserWallet": "0x9325e13dc682668ff5af582c11ce7c0da2fa221b3d7df69810fc6c32327b6bb3",
+    "totalDeposited": 10000000,
+    "spentAmount": 9000000,
+    "cpcBid": 1000000,
+    "imageUrl": "https://aggregator.walrus-testnet.walrus.space/v1/blobs/eLFtOnTh8x_9c0jTmpW8X7-hJJScwDFDj1u_aLBRq_M",
+    "targetUrl": "https://sariyericecek.com.tr/",
+    "status": "active",
+    "walrusAggregator": "https://aggregator.walrus-testnet.walrus.space",
+    "walrusCreativeBlobId": "eLFtOnTh8x_9c0jTmpW8X7-hJJScwDFDj1u_aLBRq_M",
+    "walrusCreativeObjectId": "0xd820e9f80c8b1dc75229653d8881006ba236babf22e1b749c925d813d8710c1f",
+    "walrusMetadataBlobId": "ufqACdLGvMbmkEWS-ZwaBPKOpt56WSDxR_plz1wUXdE",
+    "walrusMetadataObjectId": "0x4a7f59b70513ef047a14d6f5277254e3819c571d9c6c88c7ae87755863a91c9e"
+  },
+  {
+    "name": "sariyer kola 2",
+    "id": "0x4f5732ccf6f9672c349c432bae14c9be594a3ecca03873169eed5d872024b9dd",
+    "suiObjectId": "0x4f5732ccf6f9672c349c432bae14c9be594a3ecca03873169eed5d872024b9dd",
+    "advertiserWallet": "0x9325e13dc682668ff5af582c11ce7c0da2fa221b3d7df69810fc6c32327b6bb3",
+    "totalDeposited": 1000000000,
+    "spentAmount": 2400000,
+    "cpcBid": 1000000,
+    "imageUrl": "https://aggregator.walrus-testnet.walrus.space/v1/blobs/eLFtOnTh8x_9c0jTmpW8X7-hJJScwDFDj1u_aLBRq_M",
+    "targetUrl": "https://sariyericecek.com.tr/",
+    "status": "active",
+    "walrusAggregator": "https://aggregator.walrus-testnet.walrus.space",
+    "walrusCreativeBlobId": "eLFtOnTh8x_9c0jTmpW8X7-hJJScwDFDj1u_aLBRq_M",
+    "walrusCreativeObjectId": "0xf15dd790928d627a158f576f5169d7452d5ab901becdd92e794c28ad4356addf",
+    "walrusMetadataBlobId": "9KkohyQho1sVX45nH-5hu1eJ2phgUKmAJXZdkgAl76Q",
+    "walrusMetadataObjectId": "0x8b91015a918144984b7dbb5316de75f3801410d9af3fdfb20f70d76d11639935"
   }
 ]

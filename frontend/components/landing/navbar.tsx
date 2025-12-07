@@ -32,6 +32,9 @@ export function Navbar() {
           <Link href="/docs" className="text-muted-foreground hover:text-foreground transition-colors">
             Docs
           </Link>
+          <Link href="/debug" className="text-muted-foreground hover:text-foreground transition-colors">
+            Debug
+          </Link>
         </nav>
 
         <div className="flex items-center gap-3">
