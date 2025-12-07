@@ -26,7 +26,7 @@ export function Navbar() {
         </Link>
 
         <nav className="hidden md:flex items-center gap-8 text-sm">
-          <Link href="#features" className="text-muted-foreground hover:text-foreground transition-colors">
+          <Link href="/#features" className="text-muted-foreground hover:text-foreground transition-colors">
             Features
           </Link>
           <Link href="/docs" className="text-muted-foreground hover:text-foreground transition-colors">

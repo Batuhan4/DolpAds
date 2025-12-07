@@ -18,7 +18,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog"
 import { Wallet, LogOut, ChevronDown, Copy, Check, Loader2 } from "lucide-react"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 
 interface ConnectWalletButtonProps {
   variant?: "default" | "outline" | "ghost"
@@ -33,10 +33,16 @@ export function ConnectWalletButton({ variant = "default", size = "default", cla
   const { mutate: disconnect } = useDisconnectWallet()
   const [copied, setCopied] = useState(false)
   const [dialogOpen, setDialogOpen] = useState(false)
+  const [isMounted, setIsMounted] = useState(false)
+
+  // Prevent hydration mismatch by only rendering after mount
+  useEffect(() => {
+    setIsMounted(true)
+  }, [])
 
   const handleCopyAddress = () => {
-    if (currentAccount?.address) {
-      navigator.clipboard.writeText(currentAccount.address)
+    if (account?.address) {
+      navigator.clipboard.writeText(account.address)
       setCopied(true)
       setTimeout(() => setCopied(false), 2000)
     }
@@ -51,6 +57,16 @@ export function ConnectWalletButton({ variant = "default", size = "default", cla
     if (!wallet) return
     await connectWallet({ wallet })
     setDialogOpen(false)
+  }
+
+  // Show a simple placeholder during SSR to prevent hydration mismatch
+  if (!isMounted) {
+    return (
+      <Button variant={variant} size={size} className={className} disabled>
+        <Wallet className="mr-2 h-4 w-4" />
+        Connect Wallet
+      </Button>
+    )
   }
 
   // Not connected - show connect dialog
@@ -128,7 +144,7 @@ export function ConnectWalletButton({ variant = "default", size = "default", cla
           {copied ? "Copied!" : "Copy Address"}
         </DropdownMenuItem>
         <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={disconnect} className="cursor-pointer text-destructive focus:text-destructive">
+        <DropdownMenuItem onClick={() => disconnect()} className="cursor-pointer text-destructive focus:text-destructive">
           <LogOut className="mr-2 h-4 w-4" />
           Disconnect
         </DropdownMenuItem>

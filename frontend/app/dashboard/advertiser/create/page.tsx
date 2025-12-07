@@ -177,6 +177,8 @@ export default function CreateCampaignPage() {
       if (!campaignId) {
         const digest = (result as any)?.digest
         if (digest) {
+          // Wait for transaction to be indexed before polling
+          await new Promise((r) => setTimeout(r, 2000))
           const maxAttempts = 8
           const delayMs = 1000
           for (let i = 0; i < maxAttempts && !campaignId; i++) {

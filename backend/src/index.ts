@@ -5,6 +5,7 @@ import path from "node:path";
 import { PORT } from "./config.js";
 import {
   hasCampaigns,
+  listCampaigns,
   loadPersistedCampaigns,
   loadPersistedCounters,
   loadPersistedWebsites,
@@ -33,8 +34,10 @@ app.get("/health", (_req, res) => res.json({ status: "ok" }));
 
 // Restore campaigns, counters, websites snapshots from Walrus if configured.
 void loadPersistedCampaigns().then(() => {
+  console.log(`[startup] Loaded ${listCampaigns().length} campaigns from persistence`);
   if (!hasCampaigns()) {
     // Seed a demo campaign so /serve works out of the box.
+    console.log("[startup] No campaigns found, seeding demo campaign");
     seedCampaign({
       name: "Demo Campaign",
       id: "demo-campaign",

@@ -16,6 +16,8 @@ export async function readStateFromWalrus<T>(
     const resp = await fetch(url, { signal: controller.signal });
     if (!resp.ok) throw new Error(`Failed to read Walrus blob ${blobId} (${resp.status})`);
     const json = (await resp.json()) as T;
+    const itemCount = Array.isArray(json) ? json.length : "N/A";
+    console.log(`[state-reader] Walrus blob ${blobId} returned ${itemCount} items`);
     return json;
   } finally {
     clear();

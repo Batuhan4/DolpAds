@@ -1,0 +1,30 @@
+[
+  {
+    "name": "Demo Campaign",
+    "id": "demo-campaign",
+    "advertiserWallet": "0x_advertiser_demo",
+    "totalDeposited": 10000000,
+    "spentAmount": 0,
+    "cpcBid": 150000,
+    "imageUrl": "https://dummyimage.com/728x90/134e4a/ffffff&text=DolpAds+Demo",
+    "targetUrl": "https://dolpads.com",
+    "status": "active"
+  },
+  {
+    "name": "summer",
+    "id": "0x4e208fca49d7444057d3a016f9914615ee6cbf41ef456d18241dcf495a89fc68",
+    "suiObjectId": "0x4e208fca49d7444057d3a016f9914615ee6cbf41ef456d18241dcf495a89fc68",
+    "advertiserWallet": "0x9325e13dc682668ff5af582c11ce7c0da2fa221b3d7df69810fc6c32327b6bb3",
+    "totalDeposited": 1000000,
+    "spentAmount": 0,
+    "cpcBid": 10000,
+    "imageUrl": "https://aggregator.walrus-testnet.walrus.space/v1/blobs/TKLVDnJkPDv5lncTHosGxfGrYTtzUCVu9X8c6F9DkLk",
+    "targetUrl": "https://dolpads.com",
+    "status": "active",
+    "walrusAggregator": "https://aggregator.walrus-testnet.walrus.space",
+    "walrusCreativeBlobId": "TKLVDnJkPDv5lncTHosGxfGrYTtzUCVu9X8c6F9DkLk",
+    "walrusCreativeObjectId": "0x29d8f25a00f2fff1e75de064ffdad97c783d3c7d8ab50652a52e75d9bbad46f2",
+    "walrusMetadataBlobId": "KgaCvEqyOadZQX-uzSW2lt3mWjRMjreR9Um1bZS1ym4",
+    "walrusMetadataObjectId": "0x2e75fa8d22439dbc4f5e4c5dfebffdcc05b5e19b65b5d182ed9bc61cf7f02f57"
+  }
+]
